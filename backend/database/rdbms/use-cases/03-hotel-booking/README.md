@@ -5,6 +5,17 @@
 ```mermaid
 erDiagram
     ROOMS ||--o{ BOOKINGS : "booked as"
+
+    ROOMS {
+        bigint id PK
+        varchar name
+    }
+    BOOKINGS {
+        bigint id PK
+        bigint room_id FK
+        varchar guest_name
+        daterange stay_range "EXCLUDE chống chồng lấn theo room_id"
+    }
 ```
 
 ## Schema

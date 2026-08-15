@@ -3,6 +3,15 @@
 
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
+@Entity('rooms')
+export class Room {
+  @PrimaryGeneratedColumn({ type: 'bigint' })
+  id: number;
+
+  @Column()
+  name: string;
+}
+
 @Entity('bookings')
 export class Booking {
   @PrimaryGeneratedColumn({ type: 'bigint' })
@@ -26,7 +35,8 @@ import { Repository, QueryFailedError } from 'typeorm';
 export class BookingService {
   constructor(@InjectRepository(Booking) private readonly bookingRepo: Repository<Booking>) {}
 
-  // Migration (xem DDL đầy đủ ở ../../README.md):
+  // EXCLUDE constraint không biểu diễn được qua @Column/@Index của TypeORM —
+  // phải tạo thủ công trong migration (xem DDL đầy đủ ở ../../README.md):
   // CREATE EXTENSION IF NOT EXISTS btree_gist;
   // ALTER TABLE bookings ADD CONSTRAINT no_overlap
   //   EXCLUDE USING gist (room_id WITH =, stay_range WITH &&);

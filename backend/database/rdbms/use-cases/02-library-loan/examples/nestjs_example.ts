@@ -1,6 +1,59 @@
 // npm install @nestjs/typeorm typeorm pg
 
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import {
+  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToMany, JoinTable,
+} from 'typeorm';
+
+@Entity('authors')
+export class Author {
+  @PrimaryGeneratedColumn({ type: 'bigint' })
+  id: number;
+
+  @Column()
+  name: string;
+}
+
+@Entity('books')
+export class Book {
+  @PrimaryGeneratedColumn({ type: 'bigint' })
+  id: number;
+
+  @Column()
+  title: string;
+
+  @Column({ unique: true, nullable: true })
+  isbn: string;
+
+  // Bảng trung gian book_authors do TypeORM tự quản lý qua @JoinTable
+  @ManyToMany(() => Author)
+  @JoinTable({
+    name: 'book_authors',
+    joinColumn: { name: 'book_id' },
+    inverseJoinColumn: { name: 'author_id' },
+  })
+  authors: Author[];
+}
+
+@Entity('book_copies')
+export class BookCopy {
+  @PrimaryGeneratedColumn({ type: 'bigint' })
+  id: number;
+
+  @Column({ name: 'book_id', type: 'bigint' })
+  bookId: number;
+
+  @Column({ unique: true })
+  barcode: string;
+}
+
+@Entity('members')
+export class Member {
+  @PrimaryGeneratedColumn({ type: 'bigint' })
+  id: number;
+
+  @Column()
+  name: string;
+}
 
 @Entity('loans')
 export class Loan {
@@ -31,7 +84,8 @@ import { Repository, QueryFailedError } from 'typeorm';
 export class LoanService {
   constructor(@InjectRepository(Loan) private readonly loanRepo: Repository<Loan>) {}
 
-  // Migration tạo partial unique index (xem DDL đầy đủ ở ../../README.md):
+  // Partial unique index không biểu diễn được qua @Column/@Index của TypeORM —
+  // phải tạo thủ công trong migration (xem DDL đầy đủ ở ../../README.md):
   // CREATE UNIQUE INDEX idx_one_active_loan_per_copy ON loans(book_copy_id) WHERE returned_at IS NULL;
 
   async borrow(bookCopyId: number, memberId: number, dueAt: Date) {

@@ -5,9 +5,41 @@
 ```mermaid
 erDiagram
     BOOKS ||--o{ BOOK_COPIES : has
-    BOOKS }o--o{ AUTHORS : "written by"
+    BOOKS ||--o{ BOOK_AUTHORS : "written via"
+    AUTHORS ||--o{ BOOK_AUTHORS : "writes via"
     BOOK_COPIES ||--o{ LOANS : "borrowed via"
     MEMBERS ||--o{ LOANS : borrows
+
+    AUTHORS {
+        bigint id PK
+        varchar name
+    }
+    BOOKS {
+        bigint id PK
+        varchar title
+        varchar isbn UK
+    }
+    BOOK_AUTHORS {
+        bigint book_id PK, FK
+        bigint author_id PK, FK
+    }
+    BOOK_COPIES {
+        bigint id PK
+        bigint book_id FK
+        varchar barcode UK
+    }
+    MEMBERS {
+        bigint id PK
+        varchar name
+    }
+    LOANS {
+        bigint id PK
+        bigint book_copy_id FK
+        bigint member_id FK
+        timestamp borrowed_at
+        timestamp due_at
+        timestamp returned_at "NULL = đang được mượn"
+    }
 ```
 
 ## Schema

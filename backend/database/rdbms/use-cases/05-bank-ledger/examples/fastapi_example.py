@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI, HTTPException
 from sqlalchemy import (
-    create_engine, Column, BigInteger, Text, Numeric, ForeignKey, TIMESTAMP, func, select,
+    create_engine, Column, BigInteger, String, Text, Numeric, ForeignKey, TIMESTAMP, func, select,
 )
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
@@ -10,6 +10,13 @@ engine = create_engine("postgresql://user:pass@localhost/bank")
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 app = FastAPI()
+
+
+class Account(Base):
+    __tablename__ = "accounts"
+    id = Column(BigInteger, primary_key=True)
+    owner_name = Column(Text, nullable=False)
+    currency = Column(String, nullable=False, default="VND")
 
 
 class Transaction(Base):
@@ -23,7 +30,7 @@ class LedgerEntry(Base):
     __tablename__ = "ledger_entries"
     id = Column(BigInteger, primary_key=True)
     transaction_id = Column(BigInteger, ForeignKey("transactions.id"), nullable=False)
-    account_id = Column(BigInteger, nullable=False)
+    account_id = Column(BigInteger, ForeignKey("accounts.id"), nullable=False)
     amount = Column(Numeric(18, 2), nullable=False)  # dương = ghi Có, âm = ghi Nợ
 
 

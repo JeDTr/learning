@@ -4,6 +4,54 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+class Author extends Model
+{
+    public $timestamps = false;
+
+    protected $fillable = ['name'];
+
+    public function books()
+    {
+        return $this->belongsToMany(Book::class, 'book_authors');
+    }
+}
+
+class Book extends Model
+{
+    public $timestamps = false;
+
+    protected $fillable = ['title', 'isbn'];
+
+    public function authors()
+    {
+        return $this->belongsToMany(Author::class, 'book_authors');
+    }
+
+    public function copies()
+    {
+        return $this->hasMany(BookCopy::class);
+    }
+}
+
+class BookCopy extends Model
+{
+    public $timestamps = false;
+
+    protected $fillable = ['book_id', 'barcode'];
+
+    public function book()
+    {
+        return $this->belongsTo(Book::class);
+    }
+}
+
+class Member extends Model
+{
+    public $timestamps = false;
+
+    protected $fillable = ['name'];
+}
+
 class Loan extends Model
 {
     public $timestamps = false;
@@ -15,6 +63,16 @@ class Loan extends Model
         'borrowed_at' => 'datetime',
         'returned_at' => 'datetime',
     ];
+
+    public function bookCopy()
+    {
+        return $this->belongsTo(BookCopy::class);
+    }
+
+    public function member()
+    {
+        return $this->belongsTo(Member::class);
+    }
 }
 
 namespace App\Http\Controllers;
@@ -24,7 +82,8 @@ use Illuminate\Database\QueryException;
 
 class LoanController extends Controller
 {
-    // Migration tạo partial unique index (xem DDL đầy đủ ở ../../README.md):
+    // Partial unique index không biểu diễn được qua schema builder của Eloquent —
+    // phải tạo thủ công trong migration (xem DDL đầy đủ ở ../../README.md):
     // DB::statement('CREATE UNIQUE INDEX idx_one_active_loan_per_copy ON loans(book_copy_id) WHERE returned_at IS NULL');
 
     public function store(int $bookCopyId, int $memberId, string $dueAt)

@@ -7,7 +7,31 @@ erDiagram
     USERS ||--o{ ORDERS : places
     ORDERS ||--|{ ORDER_ITEMS : contains
     PRODUCTS ||--o{ ORDER_ITEMS : "sold as"
-    ORDERS ||--o| PAYMENTS : "paid by"
+
+    USERS {
+        bigint id PK
+        varchar email UK
+        timestamp created_at
+    }
+    PRODUCTS {
+        bigint id PK
+        varchar name
+        numeric price
+        int stock_qty
+    }
+    ORDERS {
+        bigint id PK
+        bigint user_id FK
+        varchar status
+        timestamp created_at
+    }
+    ORDER_ITEMS {
+        bigint id PK
+        bigint order_id FK
+        bigint product_id FK
+        int quantity
+        numeric unit_price "snapshot giá lúc mua"
+    }
 ```
 
 ## Schema

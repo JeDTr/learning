@@ -1,7 +1,10 @@
 # pip install fastapi sqlalchemy psycopg2-binary uvicorn
 
 from fastapi import FastAPI
-from sqlalchemy import create_engine, Column, BigInteger, Text, TIMESTAMP, func, select, literal
+from sqlalchemy import (
+    create_engine, Column, BigInteger, String, Text, ForeignKey, TIMESTAMP, func,
+    select, literal,
+)
 from sqlalchemy.orm import declarative_base, sessionmaker, Session, aliased
 
 engine = create_engine("postgresql://user:pass@localhost/social")
@@ -10,13 +13,42 @@ Base = declarative_base()
 app = FastAPI()
 
 
+class User(Base):
+    __tablename__ = "users"
+    id = Column(BigInteger, primary_key=True)
+    email = Column(String, nullable=False, unique=True)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
+
+class Post(Base):
+    __tablename__ = "posts"
+    id = Column(BigInteger, primary_key=True)
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
+
 class Comment(Base):
     __tablename__ = "comments"
     id = Column(BigInteger, primary_key=True)
-    post_id = Column(BigInteger, nullable=False)
-    user_id = Column(BigInteger, nullable=False)
-    parent_comment_id = Column(BigInteger, nullable=True)
+    post_id = Column(BigInteger, ForeignKey("posts.id"), nullable=False)
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
+    parent_comment_id = Column(BigInteger, ForeignKey("comments.id"), nullable=True)  # self-reference
     content = Column(Text, nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
+
+class Like(Base):
+    __tablename__ = "likes"
+    user_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
+    post_id = Column(BigInteger, ForeignKey("posts.id"), primary_key=True)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
+
+class Follow(Base):
+    __tablename__ = "follows"
+    follower_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
+    followee_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
 

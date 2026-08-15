@@ -3,7 +3,8 @@
 
 from fastapi import FastAPI, HTTPException
 from sqlalchemy import (
-    create_engine, Column, BigInteger, String, Numeric, Integer, ForeignKey, CheckConstraint,
+    create_engine, Column, BigInteger, String, Numeric, Integer, ForeignKey,
+    CheckConstraint, TIMESTAMP, func,
 )
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
@@ -11,6 +12,13 @@ engine = create_engine("postgresql://user:pass@localhost/shop")
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 app = FastAPI()
+
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(BigInteger, primary_key=True)
+    email = Column(String, nullable=False, unique=True)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
 
 class Product(Base):
@@ -22,13 +30,22 @@ class Product(Base):
     __table_args__ = (CheckConstraint("stock_qty >= 0"),)
 
 
+class Order(Base):
+    __tablename__ = "orders"
+    id = Column(BigInteger, primary_key=True)
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
+    status = Column(String, nullable=False, default="pending")
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    __table_args__ = (CheckConstraint("status IN ('pending','paid','shipped','cancelled')"),)
+
+
 class OrderItem(Base):
     __tablename__ = "order_items"
     id = Column(BigInteger, primary_key=True)
     order_id = Column(BigInteger, ForeignKey("orders.id"), nullable=False)
     product_id = Column(BigInteger, ForeignKey("products.id"), nullable=False)
     quantity = Column(Integer, nullable=False)
-    unit_price = Column(Numeric(12, 2), nullable=False)  # snapshot giá lúc mua
+    unit_price = Column(Numeric(12, 2), nullable=False)  # snapshot giá lúc mua, KHÔNG đọc lại products.price
 
 
 @app.post("/orders/{order_id}/items")

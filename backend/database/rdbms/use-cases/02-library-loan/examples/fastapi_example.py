@@ -4,8 +4,10 @@
 from datetime import datetime
 
 from fastapi import FastAPI, HTTPException
-from sqlalchemy import create_engine, Column, BigInteger, TIMESTAMP, func
-from sqlalchemy.orm import declarative_base, sessionmaker, Session
+from sqlalchemy import (
+    create_engine, Column, BigInteger, String, ForeignKey, Table, TIMESTAMP, func,
+)
+from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 from sqlalchemy.exc import IntegrityError
 
 engine = create_engine("postgresql://user:pass@localhost/library")
@@ -13,18 +15,53 @@ SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 app = FastAPI()
 
+# Bảng trung gian cho quan hệ many-to-many books <-> authors
+book_authors = Table(
+    "book_authors", Base.metadata,
+    Column("book_id", BigInteger, ForeignKey("books.id"), primary_key=True),
+    Column("author_id", BigInteger, ForeignKey("authors.id"), primary_key=True),
+)
+
+
+class Author(Base):
+    __tablename__ = "authors"
+    id = Column(BigInteger, primary_key=True)
+    name = Column(String, nullable=False)
+
+
+class Book(Base):
+    __tablename__ = "books"
+    id = Column(BigInteger, primary_key=True)
+    title = Column(String, nullable=False)
+    isbn = Column(String, unique=True)
+    authors = relationship("Author", secondary=book_authors)
+
+
+class BookCopy(Base):
+    __tablename__ = "book_copies"
+    id = Column(BigInteger, primary_key=True)
+    book_id = Column(BigInteger, ForeignKey("books.id"), nullable=False)
+    barcode = Column(String, nullable=False, unique=True)
+
+
+class Member(Base):
+    __tablename__ = "members"
+    id = Column(BigInteger, primary_key=True)
+    name = Column(String, nullable=False)
+
 
 class Loan(Base):
     __tablename__ = "loans"
     id = Column(BigInteger, primary_key=True)
-    book_copy_id = Column(BigInteger, nullable=False)
-    member_id = Column(BigInteger, nullable=False)
+    book_copy_id = Column(BigInteger, ForeignKey("book_copies.id"), nullable=False)
+    member_id = Column(BigInteger, ForeignKey("members.id"), nullable=False)
     borrowed_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     due_at = Column(TIMESTAMP(timezone=True), nullable=False)
     returned_at = Column(TIMESTAMP(timezone=True), nullable=True)  # NULL = đang được mượn
 
 
-# Migration tạo bảng + partial unique index (xem DDL đầy đủ ở ../../README.md):
+# Partial unique index không biểu diễn được qua Column/Table thông thường của SQLAlchemy
+# ORM — phải tạo thủ công trong migration (xem DDL đầy đủ ở ../../README.md):
 # CREATE UNIQUE INDEX idx_one_active_loan_per_copy ON loans(book_copy_id) WHERE returned_at IS NULL;
 
 

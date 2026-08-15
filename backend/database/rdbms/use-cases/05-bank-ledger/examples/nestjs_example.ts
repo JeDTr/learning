@@ -2,6 +2,18 @@
 
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
+@Entity('accounts')
+export class Account {
+  @PrimaryGeneratedColumn({ type: 'bigint' })
+  id: number;
+
+  @Column({ name: 'owner_name' })
+  ownerName: string;
+
+  @Column({ default: 'VND' })
+  currency: string;
+}
+
 @Entity('transactions')
 export class Transaction {
   @PrimaryGeneratedColumn({ type: 'bigint' })

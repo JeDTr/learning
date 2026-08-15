@@ -5,7 +5,7 @@
 from datetime import date
 
 from fastapi import FastAPI, HTTPException
-from sqlalchemy import create_engine, Column, BigInteger, String
+from sqlalchemy import create_engine, Column, BigInteger, String, ForeignKey
 from sqlalchemy.dialects.postgresql import DATERANGE, Range
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from sqlalchemy.exc import IntegrityError
@@ -16,15 +16,22 @@ Base = declarative_base()
 app = FastAPI()
 
 
+class Room(Base):
+    __tablename__ = "rooms"
+    id = Column(BigInteger, primary_key=True)
+    name = Column(String, nullable=False)
+
+
 class Booking(Base):
     __tablename__ = "bookings"
     id = Column(BigInteger, primary_key=True)
-    room_id = Column(BigInteger, nullable=False)
+    room_id = Column(BigInteger, ForeignKey("rooms.id"), nullable=False)
     guest_name = Column(String, nullable=False)
     stay_range = Column(DATERANGE, nullable=False)
 
 
-# Migration (xem DDL đầy đủ ở ../../README.md):
+# EXCLUDE constraint không biểu diễn được qua Column/CheckConstraint của SQLAlchemy —
+# phải tạo thủ công trong migration (xem DDL đầy đủ ở ../../README.md):
 # CREATE EXTENSION IF NOT EXISTS btree_gist;
 # ALTER TABLE bookings ADD CONSTRAINT no_overlap
 #   EXCLUDE USING gist (room_id WITH =, stay_range WITH &&);

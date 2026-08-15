@@ -3,7 +3,61 @@
 // TypeORM tự tạo thêm 1 bảng phụ (comments_closure) để tra cứu ancestor/descendant
 // nhanh, KHÔNG đổi schema bảng comments (parent_comment_id vẫn giữ nguyên).
 
-import { Entity, PrimaryGeneratedColumn, Column, Tree, TreeChildren, TreeParent, JoinColumn } from 'typeorm';
+import {
+  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, PrimaryColumn,
+  Tree, TreeChildren, TreeParent, JoinColumn,
+} from 'typeorm';
+
+@Entity('users')
+export class User {
+  @PrimaryGeneratedColumn({ type: 'bigint' })
+  id: number;
+
+  @Column({ unique: true })
+  email: string;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+}
+
+@Entity('posts')
+export class Post {
+  @PrimaryGeneratedColumn({ type: 'bigint' })
+  id: number;
+
+  @Column({ name: 'user_id', type: 'bigint' })
+  userId: number;
+
+  @Column('text')
+  content: string;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+}
+
+@Entity('likes')
+export class Like {
+  @PrimaryColumn({ name: 'user_id', type: 'bigint' })
+  userId: number;
+
+  @PrimaryColumn({ name: 'post_id', type: 'bigint' })
+  postId: number;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+}
+
+@Entity('follows')
+export class Follow {
+  @PrimaryColumn({ name: 'follower_id', type: 'bigint' })
+  followerId: number;
+
+  @PrimaryColumn({ name: 'followee_id', type: 'bigint' })
+  followeeId: number;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+}
 
 @Entity('comments')
 @Tree('closure-table')

@@ -1,9 +1,69 @@
-// npm install typeorm pg
+// npm install @nestjs/typeorm typeorm pg
+
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+
+@Entity('users')
+export class User {
+  @PrimaryGeneratedColumn({ type: 'bigint' })
+  id: number;
+
+  @Column({ unique: true })
+  email: string;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+}
+
+@Entity('products')
+export class Product {
+  @PrimaryGeneratedColumn({ type: 'bigint' })
+  id: number;
+
+  @Column()
+  name: string;
+
+  @Column('numeric', { precision: 12, scale: 2 })
+  price: number;
+
+  @Column({ name: 'stock_qty' })
+  stockQty: number;
+}
+
+@Entity('orders')
+export class Order {
+  @PrimaryGeneratedColumn({ type: 'bigint' })
+  id: number;
+
+  @Column({ name: 'user_id', type: 'bigint' })
+  userId: number;
+
+  @Column({ default: 'pending' })
+  status: string;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+}
+
+@Entity('order_items')
+export class OrderItem {
+  @PrimaryGeneratedColumn({ type: 'bigint' })
+  id: number;
+
+  @Column({ name: 'order_id', type: 'bigint' })
+  orderId: number;
+
+  @Column({ name: 'product_id', type: 'bigint' })
+  productId: number;
+
+  @Column()
+  quantity: number;
+
+  @Column({ name: 'unit_price', type: 'numeric', precision: 12, scale: 2 })
+  unitPrice: number; // snapshot giá lúc mua, KHÔNG đọc lại product.price
+}
 
 import { Injectable, Controller, Post, Param, Body, BadRequestException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { Product } from './product.entity';
-import { OrderItem } from './order-item.entity';
 
 @Injectable()
 export class OrderItemService {

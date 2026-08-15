@@ -26,6 +26,18 @@ namespace App\Models;
 use App\Casts\DateRangeCast;
 use Illuminate\Database\Eloquent\Model;
 
+class Room extends Model
+{
+    public $timestamps = false;
+
+    protected $fillable = ['name'];
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
+}
+
 class Booking extends Model
 {
     public $timestamps = false;
@@ -35,6 +47,11 @@ class Booking extends Model
     protected $casts = [
         'stay_range' => DateRangeCast::class,
     ];
+
+    public function room()
+    {
+        return $this->belongsTo(Room::class);
+    }
 }
 
 namespace App\Http\Controllers;
@@ -44,7 +61,8 @@ use Illuminate\Database\QueryException;
 
 class BookingController extends Controller
 {
-    // Migration (xem DDL đầy đủ ở ../../README.md):
+    // EXCLUDE constraint không biểu diễn được qua schema builder của Eloquent —
+    // phải tạo thủ công trong migration (xem DDL đầy đủ ở ../../README.md):
     // DB::statement('CREATE EXTENSION IF NOT EXISTS btree_gist');
     // DB::statement('ALTER TABLE bookings ADD CONSTRAINT no_overlap
     //     EXCLUDE USING gist (room_id WITH =, stay_range WITH &&)');

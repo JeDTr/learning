@@ -4,6 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+class Account extends Model
+{
+    public $timestamps = false;
+
+    protected $fillable = ['owner_name', 'currency'];
+
+    public function ledgerEntries()
+    {
+        return $this->hasMany(LedgerEntry::class);
+    }
+}
+
 class Transaction extends Model
 {
     public $timestamps = false;
@@ -25,6 +37,11 @@ class LedgerEntry extends Model
     public function transaction()
     {
         return $this->belongsTo(Transaction::class);
+    }
+
+    public function account()
+    {
+        return $this->belongsTo(Account::class);
     }
 }
 

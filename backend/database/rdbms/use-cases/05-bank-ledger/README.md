@@ -6,6 +6,23 @@ Mọi giao dịch tài chính phải tuân thủ nguyên tắc **bút toán kép
 erDiagram
     ACCOUNTS ||--o{ LEDGER_ENTRIES : "has entries"
     TRANSACTIONS ||--|{ LEDGER_ENTRIES : "made of"
+
+    ACCOUNTS {
+        bigint id PK
+        varchar owner_name
+        varchar currency
+    }
+    TRANSACTIONS {
+        bigint id PK
+        varchar description
+        timestamp created_at
+    }
+    LEDGER_ENTRIES {
+        bigint id PK
+        bigint transaction_id FK
+        bigint account_id FK
+        numeric amount "dương = ghi Có, âm = ghi Nợ"
+    }
 ```
 
 ## Schema

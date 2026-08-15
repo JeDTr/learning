@@ -7,7 +7,40 @@ erDiagram
     USERS ||--o{ POSTS : writes
     POSTS ||--o{ COMMENTS : has
     COMMENTS ||--o{ COMMENTS : "replies to"
-    USERS }o--o{ USERS : follows
+    USERS ||--o{ LIKES : likes
+    POSTS ||--o{ LIKES : "liked by"
+    USERS ||--o{ FOLLOWS : "follows (follower_id)"
+    USERS ||--o{ FOLLOWS : "followed by (followee_id)"
+
+    USERS {
+        bigint id PK
+        varchar email UK
+        timestamp created_at
+    }
+    POSTS {
+        bigint id PK
+        bigint user_id FK
+        text content
+        timestamp created_at
+    }
+    COMMENTS {
+        bigint id PK
+        bigint post_id FK
+        bigint user_id FK
+        bigint parent_comment_id FK "self-reference, NULL = comment gốc"
+        text content
+        timestamp created_at
+    }
+    LIKES {
+        bigint user_id PK, FK
+        bigint post_id PK, FK
+        timestamp created_at
+    }
+    FOLLOWS {
+        bigint follower_id PK, FK
+        bigint followee_id PK, FK
+        timestamp created_at
+    }
 ```
 
 ## Schema

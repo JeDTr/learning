@@ -1,5 +1,57 @@
 <?php
-// Migration: xem DDL đầy đủ ở ../../README.md
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class User extends Model
+{
+    public $timestamps = false;
+
+    protected $fillable = ['email'];
+}
+
+class Product extends Model
+{
+    public $timestamps = false;
+
+    protected $fillable = ['name', 'price', 'stock_qty'];
+}
+
+class Order extends Model
+{
+    public $timestamps = false;
+
+    protected $fillable = ['user_id', 'status'];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+}
+
+class OrderItem extends Model
+{
+    public $timestamps = false;
+
+    // unit_price: snapshot giá lúc mua, KHÔNG đọc lại products.price
+    protected $fillable = ['order_id', 'product_id', 'quantity', 'unit_price'];
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+}
 
 namespace App\Http\Controllers;
 
