@@ -14,7 +14,7 @@ Phân loại 4 nhóm NoSQL chính (Key-Value, Document, Column-Family, Graph) �
 
 ## [sql/](sql/README.md)
 
-SQL nâng cao — bài toán JOIN (LEFT/RIGHT/FULL OUTER/SELF/CROSS), aggregation phức tạp (ROLLUP, FILTER), window functions (RANK, LAG/LEAD, running total), subquery/CTE đệ quy, và các bài toán tổng hợp (PIVOT, gaps & islands).
+SQL nâng cao — bài toán JOIN (LEFT/RIGHT/FULL OUTER/SELF/CROSS), aggregation phức tạp (ROLLUP, FILTER), window functions (RANK, LAG/LEAD, running total), subquery/CTE đệ quy, các bài toán tổng hợp (PIVOT, gaps & islands), và composite index (leftmost-prefix rule chứng minh bằng EXPLAIN ANALYZE thật).
 
 ## [redis/](redis/README.md)
 

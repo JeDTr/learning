@@ -11,6 +11,7 @@ Toàn bộ bài tập dùng chung 1 schema PostgreSQL ở [schema/seed.sql](sche
 3. [Window Functions](03-window-functions/README.md) — `ROW_NUMBER`/`RANK`/`DENSE_RANK`, top-N mỗi nhóm, `LAG`/`LEAD`, running total, moving average, `NTILE`
 4. [Subquery & CTE](04-subquery-cte/README.md) — correlated subquery, `EXISTS` vs `IN` vs `JOIN`, `WITH`, Recursive CTE (cây tổ chức)
 5. [Set operations & bài toán tổng hợp](05-set-ops-advanced/README.md) — `UNION`/`INTERSECT`/`EXCEPT`, PIVOT thủ công, gaps & islands, điền khoảng ngày thiếu
+6. [Composite Index](06-indexing/README.md) — leftmost-prefix rule, thứ tự cột, chứng minh bằng `EXPLAIN ANALYZE` thật trên 300k dòng
 
 ## Cách dùng
 
@@ -39,6 +40,7 @@ Sau đó copy từng query trong các file trên vào chạy thử, đổi đi�
 | Chuyển dữ liệu dạng hàng thành cột | PIVOT thủ công (`SUM(CASE WHEN...)`) | [05](05-set-ops-advanced/README.md#3-pivot-thủ-công-bằng-case-when--aggregate) |
 | Tìm chuỗi liên tiếp (ngày, số thứ tự) | Gaps & islands (`ROW_NUMBER` trừ ngày) | [05](05-set-ops-advanced/README.md#4-gaps--islands--tìm-chuỗi-ngày-liên-tiếp) |
 | Lấp đầy khoảng thời gian bị thiếu dữ liệu | `generate_series` + `LEFT JOIN` | [05](05-set-ops-advanced/README.md#5-điền-đủ-khoảng-ngày-bị-thiếu-dùng-cross-join--generate_series) |
+| Tăng tốc query lọc theo nhiều cột cùng lúc | Composite index (đúng thứ tự cột, leftmost-prefix) | [06](06-indexing/README.md) |
 
 ## Lưu ý PostgreSQL vs MySQL
 
