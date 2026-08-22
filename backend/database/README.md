@@ -12,6 +12,10 @@ So sánh RDBMS vs Document vs Key-Value, kèm case study thực tế (ngân hàn
 
 Phân loại 4 nhóm NoSQL chính (Key-Value, Document, Column-Family, Graph) — đặc điểm, sản phẩm tiêu biểu, use case, cách chọn loại nào, và lưu ý về CAP theorem.
 
+## [mongodb/](mongodb/README.md)
+
+MongoDB — nguyên tắc embed vs reference, các schema design pattern (Attribute, Subset, Bucket, Outlier, Extended Reference) qua 4 use case thực tế (catalog sản phẩm, blog/CMS, mạng xã hội, IoT time-series), kèm ví dụ Mongoose.
+
 ## [sql/](sql/README.md)
 
 SQL nâng cao — bài toán JOIN (LEFT/RIGHT/FULL OUTER/SELF/CROSS), aggregation phức tạp (ROLLUP, FILTER), window functions (RANK, LAG/LEAD, running total), subquery/CTE đệ quy, các bài toán tổng hợp (PIVOT, gaps & islands), và composite index (leftmost-prefix rule chứng minh bằng EXPLAIN ANALYZE thật).
