@@ -1,0 +1,105 @@
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: orders
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # FastAPI la backend duy nhat: doc san pham tu Mongo, giu gio hang trong Redis
+  # (co TTL + lock chong double-submit), va ghi don hang/thanh toan vao Postgres
+  # (can ACID that su vi lien quan tien).
+  api:
+    build: ./api
+    ports:
+      - "8000:8000"
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      MONGO_DB: catalog
+      POSTGRES_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/orders
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      mongo:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./web
+      args:
+        # duoc bundle vao code chay tren trinh duyet luc build -> phai la URL
+        # ma may host truy cap duoc (port da publish ra ngoai), khong phai ten
+        # service noi bo trong docker network.
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    environment:
+      # dung cho fetch chay trong server component (SSR/RSC) o phia container,
+      # goi thang qua Docker network bang ten service.
+      API_INTERNAL_URL: http://api:8000
+    depends_on:
+      - api
+
+  # GUI xem du lieu, chi de dev/debug thu cong - khong can cho luong app chay,
+  # nen dat trong profile "tools" de khong tu khoi dong cung `docker compose up`.
+  # Chay: docker compose --profile tools up -d adminer mongo-express
+  adminer:
+    image: adminer:4.8.1
+    profiles: ["tools"]
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on:
+      - postgres
+
+  mongo-express:
+    image: mongo-express:1.0.2-20-alpine3.19
+    profiles: ["tools"]
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongo:27017
+      # image nay mac dinh ME_CONFIG_BASICAUTH=true (dang nhap admin/pass) -
+      # tat vi day chi la GUI dev cuc bo, khong can basic auth them 1 lop.
+      ME_CONFIG_BASICAUTH: "false"
+    depends_on:
+      - mongo
+
+volumes:
+  mongo-data:
+  postgres-data:
