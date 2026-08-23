@@ -1,0 +1,47 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # 2 instance chia se chung 1 Redis, de demo presence lookup + route truc tiep:
+  # mo client toi instance nay thi notification phai duoc route dung ve day,
+  # instance kia khong nhan duoc "rac" nao ca.
+  # Ca 2 instance cung mount chung 1 volume inbox-data (SQLite, WAL mode) vi
+  # inbox phai la mot noi luu dung chung, khong phu thuoc request roi vao
+  # instance nao.
+  server-a:
+    build: ./server
+    ports:
+      - "3000:3000"
+    environment:
+      REDIS_URL: redis://redis:6379
+      PORT: 3000
+      INSTANCE_ID: server-a
+    volumes:
+      - inbox-data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  server-b:
+    build: ./server
+    ports:
+      - "3001:3000"
+    environment:
+      REDIS_URL: redis://redis:6379
+      PORT: 3000
+      INSTANCE_ID: server-b
+    volumes:
+      - inbox-data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  inbox-data:

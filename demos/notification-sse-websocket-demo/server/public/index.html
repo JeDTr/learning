@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SSE vs WebSocket — Notification Demo</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --border: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent-sse: #38bdf8;
+    --accent-ws: #a78bfa;
+    --ok: #4ade80;
+    --bad: #f87171;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p.subtitle { color: var(--muted); margin: 0 0 20px; font-size: 14px; }
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: end;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 12px; color: var(--muted); }
+  input, select, button {
+    background: #0b1220;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  button {
+    cursor: pointer;
+    background: #2563eb;
+    border-color: #2563eb;
+    font-weight: 600;
+  }
+  button:hover { background: #1d4ed8; }
+  button.secondary { background: transparent; border-color: var(--border); }
+  button.secondary:hover { background: #263449; }
+
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 800px) {
+    .columns { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    min-height: 420px;
+  }
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .panel-title { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--bad); }
+  .dot.on { background: var(--ok); }
+  .sse .panel-title { color: var(--accent-sse); }
+  .ws .panel-title { color: var(--accent-ws); }
+
+  .status { font-size: 12px; color: var(--muted); }
+
+  .log {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 8px;
+    padding-right: 4px;
+  }
+  .entry {
+    border: 1px solid var(--border);
+    background: #0b1220;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    animation: pop 0.2s ease-out;
+  }
+  .entry .meta {
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 4px;
+  }
+  .entry.system { color: var(--muted); font-style: italic; }
+  @keyframes pop {
+    from { transform: translateY(-4px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .note {
+    margin-top: 20px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  code { background: #0b1220; padding: 1px 5px; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<h1>Notification Demo — SSE vs WebSocket</h1>
+<p class="subtitle">Cùng một notification, phát qua Redis pub/sub, đẩy tới client bằng 2 kỹ thuật khác nhau để so sánh trực tiếp.</p>
+<div id="instanceBadge" style="display:inline-block; margin-bottom:16px; font-size:12px; color:#facc15; background:#1e293b; border:1px solid #334155; padding:4px 10px; border-radius:999px;">đang tải instance...</div>
+
+<div class="controls">
+  <div class="field">
+    <label for="userId">User ID (kênh nhận)</label>
+    <input id="userId" value="u1" />
+  </div>
+  <div class="field">
+    <label>&nbsp;</label>
+    <div style="display:flex; gap:8px;">
+      <button id="connectBtn">Kết nối cả 2</button>
+      <button id="disconnectBtn" class="secondary">Ngắt kết nối</button>
+    </div>
+  </div>
+
+  <div class="field" style="flex:1; min-width:160px;">
+    <label for="title">Tiêu đề</label>
+    <input id="title" value="Đơn hàng #1024 đã được xác nhận" />
+  </div>
+  <div class="field" style="flex:1; min-width:160px;">
+    <label for="message">Nội dung</label>
+    <input id="message" value="Đơn hàng của bạn đang được chuẩn bị." />
+  </div>
+  <div class="field">
+    <label for="type">Loại</label>
+    <select id="type">
+      <option value="info">info</option>
+      <option value="success">success</option>
+      <option value="warning">warning</option>
+      <option value="error">error</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>&nbsp;</label>
+    <button id="sendBtn">Gửi notification</button>
+  </div>
+</div>
+
+<div class="columns">
+  <div class="panel sse">
+    <div class="panel-header">
+      <div class="panel-title"><span class="dot" id="sseDot"></span> SSE (EventSource)</div>
+      <div class="status" id="sseStatus">disconnected</div>
+    </div>
+    <div class="log" id="sseLog"></div>
+  </div>
+
+  <div class="panel ws">
+    <div class="panel-header">
+      <div class="panel-title"><span class="dot" id="wsDot"></span> WebSocket</div>
+      <div class="status" id="wsStatus">disconnected</div>
+    </div>
+    <div class="log" id="wsLog"></div>
+  </div>
+</div>
+
+<div class="note">
+  Mở 2 tab trình duyệt với cùng <code>User ID</code> để thấy notification tới cả hai cùng lúc.
+  Thử tắt mạng (DevTools → Network → Offline) rồi bật lại: SSE tự reconnect (built-in của <code>EventSource</code>),
+  WebSocket ở đây tự reconnect bằng logic tay (backoff) viết trong <code>app.js</code>.
+  Cột "latency" là thời gian từ lúc server publish tới lúc client render (đồng hồ client/server có thể lệch nhẹ).
+  Nếu chạy <code>docker compose up</code>, có 2 instance server (<code>:3000</code> và <code>:3001</code>) chia sẻ chung Redis —
+  mở mỗi cổng ở một tab để xem badge instance khác nhau, rồi xem log <code>docker compose logs</code> để thấy
+  notification chỉ được route tới đúng instance đang giữ kết nối, instance còn lại không nhận gì cả.
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
