@@ -1,0 +1,16 @@
+{
+  "name": "chat-redis-streams",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chat demo: Redis Streams + consumer group rieng moi instance de fanout, co ack va resume sau crash.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "express": "^4.19.2",
+    "ioredis": "^5.4.1",
+    "ws": "^8.18.0"
+  }
+}

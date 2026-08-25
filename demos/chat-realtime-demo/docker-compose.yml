@@ -1,0 +1,191 @@
+services:
+  # ---------------- ha tang dung chung ----------------
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  kafka:
+    # Image chinh thuc cua Apache Kafka, chay KRaft mode 1 node (broker +
+    # controller chung 1 process, khong can ZooKeeper) - bitnami/kafka da
+    # ngung mien phi tren Docker Hub nen dung image nay thay the.
+    image: apache/kafka:3.9.2
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      # chi 1 broker duy nhat -> phai giam cac replication factor noi bo ve 1,
+      # neu khong topic he thong (vd __consumer_offsets) se khong tao duoc va
+      # consumer se ket dung o loi "group coordinator is not available"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+      start_period: 30s
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -h localhost -p 1883 -t '$$SYS/#' -C 1 -W 3 -i healthcheck || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ---------------- bien the 1: Socket.IO + Redis pub/sub ----------------
+  # ca 2 instance chia se chung Redis (dung cho adapter) va chung volume
+  # chat-data (SQLite, WAL) - xem README de biet chi tiet co che fanout.
+
+  socketio-a:
+    build: ./socketio-redis-pubsub
+    image: chat-demo-socketio-redis-pubsub
+    ports:
+      - "4001:3000"
+    environment:
+      REDIS_URL: redis://redis:6379
+      PORT: 3000
+      INSTANCE_ID: socketio-a
+    volumes:
+      - chat-data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  socketio-b:
+    build: ./socketio-redis-pubsub
+    image: chat-demo-socketio-redis-pubsub
+    ports:
+      - "4002:3000"
+    environment:
+      REDIS_URL: redis://redis:6379
+      PORT: 3000
+      INSTANCE_ID: socketio-b
+    volumes:
+      - chat-data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # ---------------- bien the 2: Redis Streams ----------------
+
+  streams-a:
+    build: ./redis-streams
+    image: chat-demo-redis-streams
+    ports:
+      - "4011:3000"
+    environment:
+      REDIS_URL: redis://redis:6379
+      PORT: 3000
+      INSTANCE_ID: streams-a
+    volumes:
+      - chat-data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  streams-b:
+    build: ./redis-streams
+    image: chat-demo-redis-streams
+    ports:
+      - "4012:3000"
+    environment:
+      REDIS_URL: redis://redis:6379
+      PORT: 3000
+      INSTANCE_ID: streams-b
+    volumes:
+      - chat-data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # ---------------- bien the 3: Kafka ----------------
+
+  kafka-a:
+    build: ./kafka
+    image: chat-demo-kafka
+    ports:
+      - "4021:3000"
+    environment:
+      KAFKA_BROKER: kafka:9092
+      PORT: 3000
+      INSTANCE_ID: kafka-a
+      KAFKAJS_NO_PARTITIONER_WARNING: "1"
+    volumes:
+      - chat-data:/app/data
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  kafka-b:
+    build: ./kafka
+    image: chat-demo-kafka
+    ports:
+      - "4022:3000"
+    environment:
+      KAFKA_BROKER: kafka:9092
+      PORT: 3000
+      INSTANCE_ID: kafka-b
+      KAFKAJS_NO_PARTITIONER_WARNING: "1"
+    volumes:
+      - chat-data:/app/data
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  # ---------------- bien the 4: MQTT (Mosquitto) ----------------
+
+  mqtt-a:
+    build: ./mqtt
+    image: chat-demo-mqtt
+    ports:
+      - "4031:3000"
+    environment:
+      MQTT_URL: mqtt://mosquitto:1883
+      PORT: 3000
+      INSTANCE_ID: mqtt-a
+    volumes:
+      - chat-data:/app/data
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+
+  mqtt-b:
+    build: ./mqtt
+    image: chat-demo-mqtt
+    ports:
+      - "4032:3000"
+    environment:
+      MQTT_URL: mqtt://mosquitto:1883
+      PORT: 3000
+      INSTANCE_ID: mqtt-b
+    volumes:
+      - chat-data:/app/data
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+
+volumes:
+  # 1 SQLite duy nhat, mount chung boi CA 8 instance cua CA 4 bien the: lich su
+  # hoi thoai giong het nhau du xem qua cong nao, vi persistence tach rieng
+  # khoi co che fanout realtime (xem README).
+  chat-data:

@@ -1,0 +1,16 @@
+{
+  "name": "chat-mqtt",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chat demo: MQTT broker (Mosquitto) voi topic rieng tung user + subscribe dong, so sanh voi kieu broadcast cua Redis Streams/Kafka.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "express": "^4.19.2",
+    "mqtt": "^5.10.1",
+    "ws": "^8.18.0"
+  }
+}

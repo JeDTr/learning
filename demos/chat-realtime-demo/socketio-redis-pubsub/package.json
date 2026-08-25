@@ -1,0 +1,17 @@
+{
+  "name": "chat-socketio-redis-pubsub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chat demo: Socket.IO + Redis adapter (pub/sub) de fanout tin nhan giua nhieu instance.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "@socket.io/redis-adapter": "^8.3.0",
+    "better-sqlite3": "^11.3.0",
+    "express": "^4.19.2",
+    "ioredis": "^5.4.1",
+    "socket.io": "^4.7.5"
+  }
+}
