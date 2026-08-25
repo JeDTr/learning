@@ -80,7 +80,7 @@ Dữ liệu là **node (thực thể) và edge (quan hệ)** có thuộc tính r
 
 Ngoài 4 nhóm cốt lõi trên, một số hệ thống chuyên dụng cũng thường được xếp vào "NoSQL" theo nghĩa rộng (không phải RDBMS quan hệ truyền thống):
 
-- **Search Engine** (Elasticsearch, OpenSearch, Solr) — tối ưu full-text search, filter/aggregate phức tạp trên dữ liệu lớn. Thường dùng **kèm** DB chính, không thay thế hoàn toàn (đồng bộ dữ liệu từ DB nguồn sang index tìm kiếm).
+- **Search Engine** (Elasticsearch, OpenSearch, Solr) — tối ưu full-text search, filter/aggregate phức tạp trên dữ liệu lớn. Thường dùng **kèm** DB chính, không thay thế hoàn toàn (đồng bộ dữ liệu từ DB nguồn sang index tìm kiếm). Xem chi tiết ở [../elasticsearch/README.md](../elasticsearch/README.md).
 - **Time-Series Database** (InfluxDB, TimescaleDB, Prometheus) — tối ưu cho dữ liệu gắn timestamp, ghi liên tục theo thời gian (metric hệ thống, dữ liệu cảm biến IoT), hỗ trợ downsampling/retention policy theo thời gian.
 - **Vector Database** (Pinecone, Milvus, Weaviate, pgvector) — lưu và tìm kiếm theo **độ tương đồng vector** (embedding), nền tảng cho các ứng dụng AI/semantic search/RAG.
 - **Ledger Database** (Amazon QLDB) — sổ cái bất biến (append-only, cryptographically verifiable), dùng khi cần audit trail tuyệt đối nhưng không cần độ phức tạp của blockchain.

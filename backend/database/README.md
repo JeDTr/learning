@@ -23,3 +23,7 @@ SQL nâng cao — bài toán JOIN (LEFT/RIGHT/FULL OUTER/SELF/CROSS), aggregatio
 ## [redis/](redis/README.md)
 
 Redis — use case thực tế (cache, session, queue, lock...) và kiến thức vận hành nâng cao (config, persistence, replication, cluster...), kèm ví dụ FastAPI/Laravel/NestJS.
+
+## [elasticsearch/](elasticsearch/README.md)
+
+Elasticsearch — kiến trúc (index, shard, replica), tính năng chính, [use-cases/](elasticsearch/use-cases/) so sánh với công cụ khác (Postgres FTS, Algolia, Splunk, Loki, Pinecone...), lưu ý vận hành, và chiến lược đồng bộ dữ liệu (CDC, Outbox) để giữ ES luôn mới nhất/chính xác.
