@@ -1,0 +1,6 @@
+api/.env
+**/__pycache__/
+web/node_modules/
+web/dist/
+web/tsconfig.tsbuildinfo
+api/.venv/

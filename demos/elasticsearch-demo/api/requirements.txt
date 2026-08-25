@@ -1,0 +1,6 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+elasticsearch==8.15.1
+aiohttp==3.10.10
+pydantic==2.9.2
+pydantic-settings==2.5.2

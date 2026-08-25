@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "elasticsearch-demo: FastAPI (uvicorn)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["app.main:app", "--reload", "--port", "8000"],
+      "cwd": "${workspaceFolder}/demos/elasticsearch-demo/api",
+      "python": "${workspaceFolder}/demos/elasticsearch-demo/api/.venv/bin/python3",
+      "envFile": "${workspaceFolder}/demos/elasticsearch-demo/api/.env",
+      "jinja": true,
+      "justMyCode": true
+    }
+  ]
+}
